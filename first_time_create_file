@@ -1,0 +1,33 @@
+# 增强学习的policy iteration测录中的计算值函数
+def compute_policy_v(env, policy, gamma=1.0):
+    """
+    以同样的policy, 每个位置重复n次目前的action（位置s, 重复 policy[s]）
+    最终每个位置都得到一个稳定的 value
+    返回这个稳定的value
+    :param env:
+    :param policy:
+    :param gamma:
+    :return:
+    """
+    v = np.zeros(env.env.nS)
+    eps = 1e-10
+    i = 0  # 迭代次数
+    while True:
+        i += 1
+        prev_v = np.copy(v)
+        for s in range(env.env.nS):
+            # todo s:0-15
+            # todo: a:policy_a 就是现阶段的策略，状态s下采取的action
+            policy_a = policy[s]
+            v[s] = 0
+            for p, s_, r, _ in env.env.P[s][policy_a]:  # 在s和a下，求q
+                # #####print(i, s, policy_a, p, s_, r)  # p,s_,r:0.333, 4, 0.0
+                # r:reword, 只有在s_是15的时候，才有+1的reword
+                # s_: 下一个状态, 下一个状态的value:prev_v[s_]
+                q_sa = r + gamma * prev_v[s_]
+                # v_π_s = 所有a属于A, π(a|s) * q(s,a)
+                v[s] += p * q_sa  # p是在s下采取a的概率? 或者p是从状态s转移到状态s_的概率？！！
+        if np.sum((np.fabs(prev_v - v))) <= eps:
+            # value converged
+            break
+    return v
